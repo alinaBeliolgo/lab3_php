@@ -2,6 +2,9 @@
 
 declare(strict_types=1);
 
+// require_once 'functions.php';
+
+
 $transactions = [
     [
         "id" => 1,
@@ -34,49 +37,57 @@ $transactions = [
     ],
 ];
 
-//эт функция для подсчета общей суммы для транзакций
+
+/**
+ * Добавляет новую транзакцию в список.
+ *
+ * @param int $id ID новой транзакции
+ * @param string $date Дата в формате YYYY-MM-DD
+ * @param float $amount Сумма транзакции
+ * @param string $description Краткое описание
+ * @param string $merchant Получатель (компанияи тд)
+ * @return void
+ */
+function addTransaction(int $id, string $date, float $amount, string $description, string $merchant) : void {
+    global $transactions;
+
+    $transactions[] = [
+        "id" => $id,
+        "date" => $date,
+        "amount" => $amount,
+        "description" => $description,
+        "merchant" => $merchant
+    ];
+
+}
+//добавление новых транзакций
+addTransaction(5, "2022-05-05", 2000.00, "Ferrari", "Ferrari Corp");
+addTransaction(6, "2023-05-05", 2000.00, "Ferrari", "Ferrari Corp");
+
+
+
+/**
+ * Считает общую сумму всех транзакций
+ *
+ * @param array $transactions Список всех транзакций
+ * @return float Сумма
+ */
 function calculateTotalAmount(array $transactions): float {
-    $total = 0;
+    $sum = 0;
     foreach ($transactions as $transaction){
-        $total += $transaction['amount'];
+        $sum += $transaction['amount'];
     }
-    return $total;
+    return $sum;
 }
 
 
 
-//функция для поиска транзакции по описанию с использованием array_filter
-function findTransactionByDescription(string $descriptionPart) {
-    global $transactions;
-    return array_filter($transactions, function($transaction) use ($descriptionPart) {
-        return strpos($transaction["description"], $descriptionPart) !== false;
-    });
-}
-
-/*
-function findTransactionById(int $id) {
-    global $transactions;
-    foreach ($transactions as $transaction) {
-        if ($transaction["id"] === $id) {
-            return $transaction;
-        }
-    }
-    return null;
-}
-*/
-
-//функция для поиска транзакции по айди c array_filter
-function findTransactionById(int $id){
-    global $transactions;
-    $result = array_filter($transactions, function($transaction) use ($id) {
-    return $transaction["id"] === $id;
-});
-return $result ? reset($result) : null;
-}
-
-
-
-//функция для количества дней с момента транзакции
+/**
+ * Возвращает сколько дней прошло с даты транзакции
+ *
+ * @param string $date Дата транзакции
+ * @return int Колво дней
+ */
 function daysSinceTransaction(string $date): int {
     $transactionDate = new DateTime($date);
     $currentDate = new DateTime();
@@ -85,36 +96,48 @@ function daysSinceTransaction(string $date): int {
 }
 
 
-// Функция для добавления новой транзакции
-function addTransaction(int $id, string $date, float $amount, string $description, string $merchant): void {
+
+/**
+ * Ищет транзакции по части описания
+ *
+ * @param string $descriptionPart название которое ищем
+ * @return array найденные транзакции
+ */
+function findTransactionByDescription(string $descriptionPart) {
     global $transactions;
-    
-    $newTransaction = [
-        "id" => $id,
-        "date" => $date,
-        "amount" => $amount,
-        "description" => $description,
-        "merchant" => $merchant,
-    ];
-    
-    $transactions[] = $newTransaction;
-}
-//
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = count($transactions) + 1;
-    $date = $_POST['date'] ?? '';
-    $amount = isset($_POST['amount']) ? (float) $_POST['amount'] : 0;
-    $description = $_POST['description'] ?? '';
-    $merchant = $_POST['merchant'] ?? '';
-    
-    if ($date && $amount > 0 && $description && $merchant) {
-        addTransaction($id, $date, $amount, $description, $merchant);
-    }
+    return array_filter($transactions, function($transaction) use ($descriptionPart) {
+        return strpos($transaction["description"], $descriptionPart) !== false;
+    });
 }
 
+print_r(findTransactionByDescription("Ferrari"));
 
 
-//функция для сортировки транзакций по дате (по возрастанию)
+
+/**
+ * Ищет транзакцию по ID
+ *
+ * @param int $id ID транзакции
+ * @return array|null Найденная транзакция или null
+ */
+function findTransactionById(int $id){
+    global $transactions;
+    $result = array_filter($transactions, function($transaction) use ($id) {
+    return $transaction["id"] === $id;
+});
+return $result ? reset($result) : null;
+}
+
+print_r(findTransactionById(5));
+
+
+
+
+/**
+ * Сортирует транзакции по дате (от ранних к поздним).
+ *
+ * @return void
+ */
 function sortTransactionsByDate() {
     global $transactions;
     usort($transactions, function($a, $b) {
@@ -126,7 +149,12 @@ function sortTransactionsByDate() {
 
 
 
-//функция для сортировки транзакций по сумме (по убыванию)
+
+/**
+ * Сортирует транзакции по сумме (от больших к меньшим).
+ *
+ * @return void
+ */
 function sortTransactionsByAmount() {
     global $transactions;
     usort($transactions, function($a, $b) {
@@ -134,15 +162,12 @@ function sortTransactionsByAmount() {
     });
 }
 
-//условие для функции сортировки 
-if (isset($_GET['sort_by'])) {
-    if ($_GET['sort_by'] == 'date') {
-        sortTransactionsByDate(); 
-    } elseif ($_GET['sort_by'] == 'amount') {
-        sortTransactionsByAmount(); 
-    }
-}
-
+//это для проверки сортировки
+//sortTransactionsByDate();
+//sortTransactionsByAmount();
+echo "<pre>";
+print_r($transactions);
+echo "</pre>";
 
 ?>
 
@@ -152,23 +177,6 @@ if (isset($_GET['sort_by'])) {
     <title>Список транзакций</title>
 </head>
 <body>
-<!--это ссылки как кнопки для сортировки функций по убыванию и по возрастанию -->
-<div>
-    <a href="?sort_by=date">Сортировать по дате</a>
-    <a href="?sort_by=amount">Сортировать по сумме (по убыванию)</a>
-</div>
-
-<!--это для для реализации функции добавления транзакции-->
-<form method="POST">
-        <label>Дата: <input type="date" name="date" required></label><br>
-        <label>Сумма: <input type="number" name="amount"  required></label><br>
-        <label>Описание: <input type="text" name="description" required></label><br>
-        <label>Получатель: <input type="text" name="merchant" required></label><br>
-        <button type="submit">Добавить транзакцию</button>
-    </form>
-
-
-
 
 <table border='1'>
     <thead>
@@ -178,8 +186,8 @@ if (isset($_GET['sort_by'])) {
             <th>Сумма</th>
             <th>Описание</th>
             <th>Получатель</th>
-            <th>Сумма общих трат</th>
             <th>Дней с момента</th>
+            <th>Сумма общих трат</th>
         </tr>
     </thead>
     <tbody>
@@ -191,13 +199,11 @@ if (isset($_GET['sort_by'])) {
                 <td>$<?= $transaction['amount'] ?></td>
                 <td><?= $transaction['description'] ?></td>
                 <td><?= $transaction['merchant'] ?></td>
-                <td>$<?= calculateTotalAmount($transactions) ?></td>
                 <td><?= daysSinceTransaction($transaction['date'])?></td>
-                
+                <td>$<?= calculateTotalAmount($transactions) ?></td>
             </tr>
         <?php endforeach; ?>
     </tbody>
 </table>
-
 </body>
 </html>
