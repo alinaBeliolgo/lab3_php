@@ -1,0 +1,28 @@
+body { 
+    font-family: Arial, sans-serif; 
+    text-align: center; 
+    margin: 0; 
+    padding: 0;
+}
+
+.gallery { 
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 10px; 
+    padding: 20px;
+}
+
+.gallery img { 
+    width: 200px; 
+    height: 200px; 
+    object-fit: cover; 
+    border-radius: 10px; 
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+}
+
+header, footer { 
+    padding: 10px; 
+    background: #f4f4f4; 
+    margin-bottom: 20px; 
+}
